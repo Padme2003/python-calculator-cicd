@@ -94,7 +94,7 @@ python-calculator/
 
 ---
 
-## 🛠️ Configuración del Proyecto
+##  Configuración del Proyecto
 
 ### 1. Código Principal (`src/calculator.py`)
 
@@ -236,7 +236,7 @@ setup(
 
 ---
 
-## 🧪 Implementación de Pruebas
+##  Implementación de Pruebas
 
 ### Pruebas Unitarias (`tests/test_calculator.py`)
 
@@ -340,7 +340,7 @@ def test_add_parametrized(a, b, expected):
 
 ---
 
-## 🚀 Pipeline CI/CD con GitHub Actions
+##  Pipeline CI/CD con GitHub Actions
 
 ### Archivo de Workflow (`.github/workflows/ci-cd.yml`)
 
@@ -576,7 +576,7 @@ jobs:
 
 ---
 
-## 📦 Construcción del Package
+##  Construcción del Package
 
 ### Proceso de Empaquetado Detallado
 
@@ -626,7 +626,7 @@ El package incluye:
 
 ---
 
-## 🎯 Cómo Ejecutar el Proyecto
+##  Cómo Ejecutar el Proyecto
 
 ### 1. Clonar el Repositorio
 ```bash
@@ -682,7 +682,7 @@ python -m build
 
 ---
 
-## 📊 Métricas y Reportes
+## Métricas y Reportes
 
 ### Cobertura de Código
 El pipeline genera reportes de cobertura que muestran:
@@ -697,7 +697,7 @@ El pipeline genera reportes de cobertura que muestran:
 
 ---
 
-## 🔧 Configuración Adicional
+##  Configuración Adicional
 
 ### `.gitignore`
 ```gitignore
@@ -834,8 +834,8 @@ Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más deta
 ## 👤 Autor
 
 **Tu Nombre**
-- GitHub: [@tuusuario](https://github.com/tuusuario)
-- Email: tu.email@ejemplo.com
+- GitHub: [padme2003](https://github.com/Padme2003/python-calculator-cicd)
+- Email: jpp.moposita@yavirac.edu.ec
 
 ---
 
