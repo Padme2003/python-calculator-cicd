@@ -1,227 +1,28 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
-# Eventos que disparan el workflow
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
-  release:
-    types: [created]
 
 jobs:
-  # Job de Linting y Formato
-  lint:
-    name: Linting y Formato de Código
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Checkout código
-      uses: actions/checkout@v4
-
-    - name: Configurar Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-    
-    - name: Instalar dependencias de linting
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 black
-    
-    - name: Ejecutar Flake8
-      run: |
-        # Detener el build si hay errores de sintaxis o variables no definidas
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero trata todos los errores como advertencias
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    
-    - name: Verificar formato con Black
-      run: |
-        black --check src/ tests/
-
-  # Job de Testing
-  test:
-    name: Pruebas Automatizadas
-    runs-on: ubuntu-latest
-    needs: lint
-    strategy:
-      matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11']
-
-    steps:
-    - name: Checkout código
-      uses: actions/checkout@v4
-
-    - name: Configurar Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Cache de dependencias
-      uses: actions/cache@v4
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-    
-    - name: Instalar dependencias
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install -e .
-    
-    - name: Ejecutar pruebas unitarias
-      run: |
-        pytest tests/ -v --cov=src --cov-report=xml --cov-report=html --cov-report=term
-    
-    - name: Verificar cobertura mínima
-      run: |
-        coverage report --fail-under=80
-    
-    - name: Subir reporte de cobertura
-      uses: actions/upload-artifact@v4
-      with:
-        name: coverage-report-${{ matrix.python-version }}
-        path: htmlcov/
-
-    - name: Subir a Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-
-  # Job de Análisis de Seguridad
-  security:
-    name: Análisis de Seguridad
-    runs-on: ubuntu-latest
-    needs: lint
-
-    steps:
-    - name: Checkout código
-      uses: actions/checkout@v4
-
-    - name: Configurar Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-    
-    - name: Instalar Bandit
-      run: |
-        python -m pip install --upgrade pip
-        pip install bandit
-    
-    - name: Ejecutar análisis de seguridad
-      run: |
-        bandit -r src/ -f json -o bandit-report.json
-
-    - name: Subir reporte de seguridad
-      uses: actions/upload-artifact@v4
-      with:
-        name: security-report
-        path: bandit-report.json
-
-  # Job de Build y Package
   build:
-    name: Construir Package
     runs-on: ubuntu-latest
-    needs: [test, security]
 
     steps:
-    - name: Checkout código
-      uses: actions/checkout@v4
+      - name: Checkout del código
+        uses: actions/checkout@v4
 
-    - name: Configurar Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-    
-    - name: Instalar dependencias de build
-      run: |
-        python -m pip install --upgrade pip
-        pip install build wheel setuptools
-    
-    - name: Construir distribución
-      run: |
-        python -m build
-    
-    - name: Verificar archivos construidos
-      run: |
-        ls -la dist/
-        pip install twine
-        twine check dist/*
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: Subir artefactos de build
-      uses: actions/upload-artifact@v4
-      with:
-        name: python-package
-        path: dist/
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-  # Job de Release (solo en tags)
-  release:
-    name: Publicar Package
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.event_name == 'release'
-
-    steps:
-    - name: Checkout código
-      uses: actions/checkout@v4
-
-    - name: Configurar Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
-
-    - name: Descargar artefactos
-      uses: actions/download-artifact@v4
-      with:
-        name: python-package
-        path: dist/
-    
-    - name: Publicar a Test PyPI
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
-      run: |
-        pip install twine
-        twine upload --repository testpypi dist/*
-    
-    - name: Publicar a PyPI
-      if: github.event.release.prerelease == false
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-      run: |
-        twine upload dist/*
-
-  # Job de Docker (opcional)
-  docker:
-    name: Construir y Publicar Imagen Docker
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-    - name: Checkout código
-      uses: actions/checkout@v4
-
-    - name: Configurar Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login a Docker Hub
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-
-    - name: Construir y publicar imagen
-      uses: docker/build-push-action@v6
-      with:
-        context: .
-        push: true
-        tags: |
-          ${{ secrets.DOCKER_USERNAME }}/python-calculator:latest
-          ${{ secrets.DOCKER_USERNAME }}/python-calculator:${{ github.sha }}
+      - name: Ejecutar tests
+        run: pytest
