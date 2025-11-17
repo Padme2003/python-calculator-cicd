@@ -3,7 +3,7 @@ Pruebas unitarias para el módulo calculator
 """
 
 import pytest
-from src.calculator import Calculator
+from calculator import Calculator
 
 
 class TestCalculator:
