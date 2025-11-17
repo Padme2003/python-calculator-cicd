@@ -14,13 +14,13 @@ jobs:
   lint:
     name: Linting y Formato de Código
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout código
-      uses: actions/checkout@v3
-    
+      uses: actions/checkout@v4
+
     - name: Configurar Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
     
@@ -48,18 +48,18 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11']
-    
+
     steps:
     - name: Checkout código
-      uses: actions/checkout@v3
-    
+      uses: actions/checkout@v4
+
     - name: Configurar Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
-    
+
     - name: Cache de dependencias
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
@@ -81,13 +81,13 @@ jobs:
         coverage report --fail-under=80
     
     - name: Subir reporte de cobertura
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report-${{ matrix.python-version }}
         path: htmlcov/
-    
+
     - name: Subir a Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./coverage.xml
         flags: unittests
@@ -98,13 +98,13 @@ jobs:
     name: Análisis de Seguridad
     runs-on: ubuntu-latest
     needs: lint
-    
+
     steps:
     - name: Checkout código
-      uses: actions/checkout@v3
-    
+      uses: actions/checkout@v4
+
     - name: Configurar Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
     
@@ -116,9 +116,9 @@ jobs:
     - name: Ejecutar análisis de seguridad
       run: |
         bandit -r src/ -f json -o bandit-report.json
-    
+
     - name: Subir reporte de seguridad
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-report
         path: bandit-report.json
@@ -128,13 +128,13 @@ jobs:
     name: Construir Package
     runs-on: ubuntu-latest
     needs: [test, security]
-    
+
     steps:
     - name: Checkout código
-      uses: actions/checkout@v3
-    
+      uses: actions/checkout@v4
+
     - name: Configurar Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
     
@@ -152,9 +152,9 @@ jobs:
         ls -la dist/
         pip install twine
         twine check dist/*
-    
+
     - name: Subir artefactos de build
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: python-package
         path: dist/
@@ -165,18 +165,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'release'
-    
+
     steps:
     - name: Checkout código
-      uses: actions/checkout@v3
-    
+      uses: actions/checkout@v4
+
     - name: Configurar Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
-    
+
     - name: Descargar artefactos
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: python-package
         path: dist/
@@ -203,22 +203,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
     - name: Checkout código
-      uses: actions/checkout@v3
-    
+      uses: actions/checkout@v4
+
     - name: Configurar Docker Buildx
-      uses: docker/setup-buildx-action@v2
-    
+      uses: docker/setup-buildx-action@v3
+
     - name: Login a Docker Hub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    
+
     - name: Construir y publicar imagen
-      uses: docker/build-push-action@v4
+      uses: docker/build-push-action@v6
       with:
         context: .
         push: true
